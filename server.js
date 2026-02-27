@@ -112,21 +112,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Check for tracker timeout (mark offline if no update for 30 seconds)
+// Check for tracker timeout (mark offline if no update for 90 seconds)
+// GPRS + TLS handshake can take 30-60s, so 30s was too aggressive
 setInterval(() => {
   if (trackerData.lastUpdate) {
     const lastUpdate = new Date(trackerData.lastUpdate);
     const now = new Date();
     const diffSeconds = (now - lastUpdate) / 1000;
     
-    if (diffSeconds > 30 && trackerData.status === 'live') {
+    if (diffSeconds > 90 && trackerData.status === 'live') {
       trackerData.status = 'offline';
       trackerData.signal = 'Weak';
       io.emit('locationUpdate', trackerData);
-      console.log('⚠️ Tracker went offline (no update for 30s)');
+      console.log('⚠️ Tracker went offline (no update for 90s)');
     }
   }
-}, 5000);
+}, 10000);
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
